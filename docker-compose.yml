@@ -5,6 +5,9 @@ services:
       context: .
     container_name: django-pod
     image: luqmansen/django-pod
+    environment:
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=6831
     ports:
     - "8000:8000"
 
@@ -18,6 +21,7 @@ services:
     - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
 
   grafana:
+    container_name: "grafana"
     image: grafana/grafana:5.3.4
     ports:
     - "3000:3000"
@@ -27,6 +31,7 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
 
   grafana-dashboard:
+    container_name: "grafana-dashboard"
     image: alpine:3.12.0
     depends_on:
       - grafana
@@ -40,3 +45,15 @@ services:
          cd /grafana
          curl --request POST http://grafana:3000/api/datasources --header 'Content-Type: application/json' -d @datasources.json
          curl --request POST http://grafana:3000/api/dashboards/db --header 'Content-Type: application/json' -d @dashboard.json"
+
+  jaeger:
+    container_name: "jaeger-web"
+    image: jaegertracing/all-in-one:1.17.1
+    ports:
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5775:5775/udp"
+      - "14250:14250"
+      - "14268:14268"
+      - "5778:5778"
+      - "16686:16686"

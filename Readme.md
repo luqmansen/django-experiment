@@ -9,6 +9,7 @@ Also going to be added some of commons Django production ready feature eg: Conne
 #### Currently Available
 - Instrumented with [Prometheus](https://prometheus.io/)
 - Health checks (readiness and liveness)
+- opentracing with Jaeger
 
 
 #### Web API
@@ -16,3 +17,5 @@ Also going to be added some of commons Django production ready feature eg: Conne
 - `GET /healthz` for Kubernetes liveness probe
 - `GET /readyz` for Kubernetes readiness probe
 
+#### Issues
+- Jaeger client for python is so buggy, sometimes the local agent reporter doesn't work

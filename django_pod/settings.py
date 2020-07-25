@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import django_opentracing
+from jaeger_client import Config
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,11 +26,13 @@ SECRET_KEY = '5$u7(&p4tw@20(l*bxv=uhv$++f+a8&14j$b3_1nh8j!#40&&5'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 APPEND_SLASH = False
-ALLOWED_HOSTS = ["0.0.0.0", "django-pod", "prometheus"]
+ALLOWED_HOSTS = ["localhost", "0.0.0.0", "django-pod", "prometheus"]
 
 # Application definition
+APP_NAME = 'django-pod'
 
 INSTALLED_APPS = [
+    'django_opentracing',
     'django_prometheus',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -39,8 +43,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'django_opentracing.OpenTracingMiddleware',
     'django_pod.middleware.health_check.HealthCheckMiddleware',
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -100,6 +105,37 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console': {
+            'format': '%(name)-12s %(levelname)-8s %(message)s'
+        },
+        'file': {
+            'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'console'
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'formatter': 'file',
+            'filename': '/tmp/debug.log'
+        }
+    },
+    'loggers': {
+        '': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'file']
+        }
+    }
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
@@ -117,3 +153,28 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# default is False
+# OPENTRACING_TRACE_ALL = True
+OPENTRACING_TRACED_ATTRIBUTES = ['META']
+
+config = Config(
+    config={
+        'sampler': {
+            'type': 'const',
+            'param': 1,
+        },
+        'local_agent': {
+            'sampling_port': 5778,
+            'reporting_host': "localhost",
+            'reporting_port': 6831,
+        },
+        'logging': True,
+    },
+    service_name=APP_NAME
+    # validate=True
+)
+TRACER = config.initialize_tracer()
+
+OPENTRACING_TRACING = django_opentracing.DjangoTracing(tracer=TRACER)
+
