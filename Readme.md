@@ -8,7 +8,11 @@ Also going to be added some of commons Django production ready feature eg: Conne
 
 #### Currently Available
 - Instrumented with [Prometheus](https://prometheus.io/)
+- Health checks (readiness and liveness)
+
 
 #### Web API
 - `GET /metrics` return prometheus metrics
+- `GET /healthz` for Kubernetes liveness probe
+- `GET /readyz` for Kubernetes readiness probe
 

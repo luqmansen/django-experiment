@@ -26,7 +26,5 @@ class Yeet(View):
 
 class Metrics(View):
     def get(self, *args, **kwargs):
-        res = list()
-        for k, v in graphs.items():
-            res.append(generate_latest(v))
+        res = [generate_latest(v) for _, v in graphs.items()]
         return HttpResponse(res, content_type='text/plain')
